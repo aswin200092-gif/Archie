@@ -1,5 +1,5 @@
 // Archie Service Worker — gentle offline support
-const CACHE_NAME = 'archie-v2';
+const CACHE_NAME = 'archie-v3';
 const ASSETS = [
   './',
   './index.html',

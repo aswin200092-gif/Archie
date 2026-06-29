@@ -1611,6 +1611,15 @@ wInit();
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
+        // Unregister ALL old service workers first
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+
+        // Clear ALL caches
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map(k => caches.delete(k)));
+
+        // Now register fresh
         const probe = await fetch('./sw.js', { method: 'HEAD' });
         if (!probe.ok) return;
         await navigator.serviceWorker.register('./sw.js');
