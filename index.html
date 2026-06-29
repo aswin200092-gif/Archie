@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#7A9E87">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Archie">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+<title>Archie</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --sage:    #7A9E87;
+    --sage-lt: #EBF2EE;
+    --blush:   #E8C4B0;
+    --blush-lt:#FDF5F0;
+    --lavender:#B3A9D3;
+    --lav-lt:  #F0EEF8;
+    --ink:     #2C2C3A;
+    --ink-soft:#5A5A70;
+    --ink-mute:#9898AA;
+    --surface: #FAFAF8;
+    --card:    #FFFFFF;
+    --border:  #E8E8E4;
+    --gold:    #D4A853;
+    --sky:     #A8C5DA;
+    --sky-lt:  #EDF4F8;
+    --warm:    #D4A97A;
+    --warm-lt: #FBF3EB;
+    --moss:    #8AAF8E;
+    --moss-lt: #EBF3EC;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--ink); min-height: 100vh; padding: 0 0 100px; }
+
+  /* ── TAB NAV ── */
+  .tab-nav {
+    display: flex; background: var(--card);
+    border-bottom: 1.5px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .tab-btn {
+    flex: 1; padding: 13px 8px; border: none; background: none;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    color: var(--ink-soft); cursor: pointer; transition: all .2s;
+    border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .tab-btn:hover { color: var(--sage); }
+  .tab-btn.active { color: var(--sage); border-bottom-color: var(--sage); font-weight: 600; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #7A9E87 0%, #B3A9D3 100%);
+    padding: 30px 24px 24px; text-align: center; position: relative; overflow: hidden;
+  }
+  header::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='28' fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1'/%3E%3C/svg%3E") repeat;
+  }
+  .header-inner { position: relative; z-index: 1; }
+  .date-label { font-size: 11px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+  header h1 { font-family: 'DM Serif Display', serif; font-size: clamp(22px, 6vw, 34px); color: #fff; line-height: 1.2; }
+  header h1 em { font-style: italic; color: rgba(255,255,255,0.85); }
+  .progress-strip { margin-top: 18px; background: rgba(255,255,255,0.2); border-radius: 99px; height: 7px; max-width: 300px; margin-left: auto; margin-right: auto; overflow: hidden; }
+  .progress-fill { height: 100%; background: #fff; border-radius: 99px; transition: width 0.5s cubic-bezier(.4,0,.2,1); width: 0%; }
+  .progress-text { color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 500; margin-top: 7px; }
+
+  /* ── MOOD BAR ── */
+  .mood-bar { background: var(--lav-lt); border-bottom: 1px solid var(--lavender); padding: 12px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .mood-bar span { font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+  .mood-btn { border: 2px solid transparent; background: #fff; border-radius: 50px; padding: 5px 12px; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 5px; font-family: 'DM Sans', sans-serif; color: var(--ink); font-size: 13px; }
+  .mood-btn:hover { transform: scale(1.08); }
+  .mood-btn.active { border-color: var(--lavender); background: var(--lav-lt); font-weight: 600; }
+
+  /* ── AFFIRMATION ── */
+  .affirmation-box { margin: 16px 16px 0; background: linear-gradient(120deg, var(--blush-lt), var(--lav-lt)); border: 1px solid var(--blush); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .quote-icon { font-size: 24px; flex-shrink: 0; }
+  .affirmation-text { font-family: 'DM Serif Display', serif; font-style: italic; font-size: 15px; color: var(--ink-soft); line-height: 1.5; flex: 1; }
+  .refresh-btn { background: none; border: none; cursor: pointer; font-size: 18px; opacity: 0.5; transition: opacity .2s, transform .3s; flex-shrink: 0; }
+  .refresh-btn:hover { opacity: 1; transform: rotate(180deg); }
+
+  /* ── CONTROLS ── */
+  .controls { display: flex; gap: 8px; padding: 14px 16px 0; flex-wrap: wrap; }
+  .ctrl-btn { flex: 1; min-width: 100px; border: 1.5px solid var(--border); background: var(--card); border-radius: 10px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: var(--ink-soft); cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 5px; justify-content: center; }
+  .ctrl-btn:hover { border-color: var(--sage); color: var(--sage); background: var(--sage-lt); }
+  .ctrl-btn.danger:hover { border-color: #e07070; color: #e07070; background: #fdf0f0; }
+
+  /* ── TIMETABLE ── */
+  .timetable { padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+  .time-block { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; transition: box-shadow .2s; }
+  .time-block:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.06); }
+  .time-block.done { background: var(--sage-lt); border-color: var(--sage); }
+  .time-block.done .task-text { text-decoration: line-through; opacity: 0.55; }
+  .block-main { display: flex; align-items: center; gap: 11px; padding: 13px 14px; cursor: pointer; }
+  .time-pill { background: var(--sage-lt); color: var(--sage); font-size: 11px; font-weight: 600; letter-spacing: .5px; padding: 4px 10px; border-radius: 99px; white-space: nowrap; min-width: 68px; text-align: center; }
+  .time-block.done .time-pill { background: var(--sage); color: #fff; }
+  .category-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .task-info { flex: 1; min-width: 0; }
+  .task-text { font-size: 14px; font-weight: 500; color: var(--ink); transition: all .2s; word-break: break-word; }
+  .task-note { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .check-circle { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .25s cubic-bezier(.4,0,.2,1); font-size: 13px; color: transparent; background: #fff; }
+  .time-block.done .check-circle { border-color: var(--sage); background: var(--sage); color: #fff; }
+
+  /* expand panel */
+  .block-expand { border-top: 1px solid var(--border); padding: 12px 14px; display: none; flex-direction: column; gap: 8px; }
+  .block-expand.open { display: flex; }
+  .expand-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-soft); }
+  .expand-note { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; resize: none; color: var(--ink); background: var(--surface); outline: none; transition: border-color .2s; min-height: 55px; }
+  .expand-note:focus { border-color: var(--sage); }
+  .expand-actions { display: flex; gap: 8px; }
+  .expand-del { border: 1.5px solid #e0b0b0; background: none; color: #c06060; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s; }
+  .expand-del:hover { background: #fdf0f0; }
+  .expand-edit { border: 1.5px solid var(--sage); background: none; color: var(--sage); border-radius: 8px; padding: 5px 12px; font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s; }
+  .expand-edit:hover { background: var(--sage-lt); }
+  .edit-form { display: none; flex-direction: column; gap: 8px; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 2px; }
+  .edit-form.open { display: flex; }
+  .edit-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .edit-input { flex: 1; min-width: 100px; border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 11px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); background: var(--surface); outline: none; transition: border-color .2s; }
+  .edit-input:focus { border-color: var(--sage); }
+  select.edit-input { cursor: pointer; }
+  .edit-save { background: var(--sage); color: #fff; border: none; border-radius: 8px; padding: 7px 16px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; transition: background .2s; }
+  .edit-save:hover { background: #6a9076; }
+  .edit-cancel { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink-soft); cursor: pointer; transition: all .2s; }
+  .edit-cancel:hover { border-color: var(--ink-soft); }
+
+  /* ── ADD INTENTION ── */
+  .add-section { margin: 0 14px; background: var(--card); border: 1.5px dashed var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+  .add-section h3 { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+  .add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .add-input { flex: 1; min-width: 110px; border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); background: var(--surface); outline: none; transition: border-color .2s; }
+  .add-input:focus { border-color: var(--sage); }
+  select.add-input { cursor: pointer; }
+  .add-submit { background: var(--sage); color: #fff; border: none; border-radius: 10px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; transition: background .2s, transform .1s; }
+  .add-submit:hover { background: #6a9076; }
+  .add-submit:active { transform: scale(0.97); }
+
+  /* ── WELLNESS ROW ── */
+  .wellness-row { display: flex; gap: 10px; padding: 14px 14px 0; flex-wrap: wrap; }
+  .wellness-card { flex: 1; min-width: 130px; background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 13px 14px; text-align: center; }
+  .wellness-card h4 { font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
+
+  /* ── WATER BOTTLE CARD ── */
+  .water-bottle-card {
+    background: linear-gradient(145deg, #EDF6FF 0%, #E8F5FF 50%, #F0EEFA 100%);
+    border: 1.5px solid #C8DFF0;
+    border-radius: 20px;
+    padding: 18px 16px 16px;
+    margin: 14px 14px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .water-bottle-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(168,197,218,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .water-bottle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .water-bottle-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .water-bottle-title .wbt-icon { font-size: 16px; }
+  .water-progress-badge {
+    background: linear-gradient(135deg, #A8C5DA, #7BAFD4);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .water-bottles-grid {
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 4px 0;
+  }
+  /* The SVG bottle wrapper */
+  .bottle-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: transform .22s cubic-bezier(.4,0,.2,1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottle-wrap:hover { transform: translateY(-4px) scale(1.08); }
+  .bottle-wrap:active { transform: scale(0.94); }
+  .bottle-svg {
+    width: 34px;
+    height: 64px;
+    filter: drop-shadow(0 2px 6px rgba(100,160,210,0.18));
+    transition: filter .3s;
+  }
+  .bottle-wrap.filled .bottle-svg {
+    filter: drop-shadow(0 3px 10px rgba(80,150,220,0.38));
+  }
+  .bottle-num {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--ink-mute);
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.3px;
+    transition: color .3s;
+  }
+  .bottle-wrap.filled .bottle-num { color: #5A9FCC; }
+
+  /* Water stats row */
+  .water-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(168,197,218,0.3);
+  }
+  .water-stat-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .water-litres-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: #4A8FBF;
+    line-height: 1;
+  }
+  .water-litres-sub {
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .water-progress-bar-wrap {
+    flex: 1;
+    margin: 0 14px;
+  }
+  .water-progress-bar-bg {
+    height: 7px;
+    background: rgba(168,197,218,0.25);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .water-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #A8C5DA, #5BAADA);
+    border-radius: 99px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+    width: 0%;
+  }
+  .water-pct-label {
+    font-size: 10px;
+    color: var(--ink-mute);
+    margin-top: 4px;
+    font-family: 'DM Sans', sans-serif;
+    text-align: right;
+  }
+  .water-goal-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #5A9FCC;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  /* ── BREATHE VISUAL ── */
+  .breathe-visual { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .breathe-flower {
+    width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+    font-size: 38px; transition: transform 4s ease-in-out, filter 4s ease-in-out;
+    filter: saturate(0.5);
+  }
+  .breathe-flower.inhaling { transform: scale(1.5); filter: saturate(1.3) brightness(1.1); }
+  .breathe-flower.holding  { transform: scale(1.5); filter: saturate(1.3); }
+  .breathe-flower.exhaling { transform: scale(1.0); filter: saturate(0.5); }
+  .breathe-btn { background: var(--lav-lt); border: 1.5px solid var(--lavender); border-radius: 99px; padding: 7px 16px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: #6d64a8; cursor: pointer; transition: all .2s; }
+  .breathe-btn:hover { background: var(--lavender); color: #fff; }
+  .breathe-status { font-size: 12px; color: var(--ink-soft); min-height: 18px; }
+
+  /* ── GOODNIGHT CARD ── */
+  .goodnight-card {
+    display: none; margin: 14px 14px 0;
+    background: linear-gradient(135deg, #2C2C4A 0%, #4A3060 100%);
+    border-radius: 18px; padding: 24px 20px; text-align: center;
+    animation: fadeIn .6s ease;
+  }
+  .goodnight-card.show { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .goodnight-card .moon { font-size: 36px; margin-bottom: 12px; }
+  .goodnight-card h2 { font-family: 'DM Serif Display', serif; font-size: 22px; font-style: italic; color: #fff; margin-bottom: 10px; }
+  .goodnight-card p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.7; }
+
+  /* ── MEMORY GARDEN ── */
+  .garden-section { margin: 14px 14px 0; background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px; }
+  .garden-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--ink); margin-bottom: 4px; }
+  .garden-sub { font-size: 12px; color: var(--ink-mute); margin-bottom: 12px; }
+  .garden-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .garden-flower { font-size: 22px; cursor: default; transition: transform .3s; }
+  .garden-flower:hover { transform: scale(1.2); }
+  .garden-empty { font-size: 12px; color: var(--ink-mute); font-style: italic; }
+
+  /* ── EMERGENCY BUTTON ── */
+  .emergency-fab {
+    position: fixed; bottom: 20px; right: 18px; z-index: 200;
+    background: linear-gradient(135deg, #C06080, #9060A0);
+    color: #fff; border: none; border-radius: 99px;
+    padding: 12px 18px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(150,60,120,0.35);
+    transition: transform .2s, box-shadow .2s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .emergency-fab:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(150,60,120,0.45); }
+
+  /* ── EMERGENCY MODAL ── */
+  .emergency-overlay {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(30,20,40,0.6); backdrop-filter: blur(4px);
+    align-items: flex-end; justify-content: center;
+    padding: 0 0 0 0;
+  }
+  .emergency-overlay.show { display: flex; }
+  .emergency-modal {
+    background: var(--card); border-radius: 24px 24px 0 0;
+    padding: 28px 20px 40px; width: 100%; max-width: 540px;
+    animation: slideUp .35s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .emergency-modal h3 { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 4px; }
+  .emergency-modal .em-sub { font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+  .comfort-items { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .comfort-item {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 12px 16px; font-size: 14px; color: var(--ink-soft); line-height: 1.5;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .comfort-item .ci-icon { font-size: 22px; flex-shrink: 0; }
+  .em-close { width: 100%; padding: 13px; border: none; border-radius: 14px; background: var(--sage-lt); color: var(--sage); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .em-close:hover { background: var(--sage); color: #fff; }
+
+  /* ── REASONS PAGE ── */
+  .reasons-header { background: linear-gradient(135deg, #9060A0 0%, #C06080 100%); padding: 28px 20px 22px; text-align: center; }
+  .reasons-header h2 { font-family: 'DM Serif Display', serif; font-size: 28px; font-style: italic; color: #fff; margin-bottom: 6px; }
+  .reasons-header p { font-size: 13px; color: rgba(255,255,255,0.75); }
+  .reasons-main { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .reason-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .reason-emoji { font-size: 24px; flex-shrink: 0; }
+  .reason-text { font-size: 14px; color: var(--ink-soft); line-height: 1.5; flex: 1; font-style: italic; }
+  .reason-del { background: none; border: none; font-size: 16px; cursor: pointer; opacity: 0.3; transition: opacity .2s; color: #c06060; }
+  .reason-del:hover { opacity: 0.8; }
+  .add-reason-row { display: flex; gap: 8px; }
+  .reason-input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 13px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); background: var(--surface); outline: none; transition: border-color .2s; }
+  .reason-input:focus { border-color: #9060A0; }
+  .reason-add-btn { background: #9060A0; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; }
+
+  /* ── TOAST ── */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: #fff; border-radius: 99px; padding: 10px 20px; font-size: 13px; font-weight: 500; transition: transform .35s cubic-bezier(.4,0,.2,1); pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── WEEKLY SECTION ── */
+  .weekly-header { background: linear-gradient(135deg, #8AAF8E 0%, #A8C5DA 100%); padding: 26px 20px 20px; text-align: center; position: relative; overflow: hidden; }
+  .weekly-header::before { content:''; position:absolute; inset:0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='28' fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1'/%3E%3C/svg%3E") repeat; }
+  .weekly-header-inner { position: relative; z-index: 1; }
+  .week-tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.2); border-radius: 99px; padding: 4px 14px; margin-bottom: 10px; }
+  .weekly-header h2 { font-family: 'DM Serif Display', serif; font-size: clamp(20px,5vw,28px); color: #fff; line-height: 1.2; }
+  .weekly-header h2 em { font-style: italic; color: rgba(255,255,255,0.85); }
+  .weekly-header p { font-size: 12px; color: rgba(255,255,255,0.72); margin-top: 6px; }
+  .week-nav-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 13px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+  .wnav-btn { background: none; border: 1.5px solid var(--border); border-radius: 99px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; color: var(--ink-soft); transition: all .2s; }
+  .wnav-btn:hover { border-color: var(--moss); color: var(--moss); }
+  .week-range-label { font-size: 13px; font-weight: 600; color: var(--ink); min-width: 170px; text-align: center; }
+  .weekly-main { padding: 14px; display: flex; flex-direction: column; gap: 13px; }
+  .w-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 16px; }
+  .w-card-title { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--ink); margin-bottom: 3px; display: flex; align-items: center; gap: 7px; }
+  .w-card-sub { font-size: 12px; color: var(--ink-mute); margin-bottom: 13px; line-height: 1.5; }
+  .day-mood-grid { display: flex; flex-direction: column; gap: 7px; }
+  .day-mood-row { display: flex; align-items: center; gap: 9px; background: var(--surface); border-radius: 10px; padding: 8px 11px; border: 1.5px solid var(--border); }
+  .day-mood-row:focus-within { border-color: var(--sky); }
+  .dmr-name { font-size: 12px; font-weight: 600; color: var(--ink-soft); min-width: 32px; }
+  .dmr-emojis { display: flex; gap: 4px; flex: 1; }
+  .emoji-btn { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; background: none; cursor: pointer; font-size: 14px; transition: all .2s; display: flex; align-items: center; justify-content: center; }
+  .emoji-btn:hover { transform: scale(1.2); }
+  .emoji-btn.sel { background: var(--lav-lt); border-color: var(--lavender); transform: scale(1.15); }
+  .dmr-note { border: none; background: none; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--ink-soft); outline: none; width: 75px; border-bottom: 1px dashed var(--border); transition: border-color .2s; padding: 2px 4px; }
+  .dmr-note:focus { border-bottom-color: var(--sky); }
+  .dmr-note::placeholder { color: var(--border); }
+  .w-slider-group { display: flex; flex-direction: column; gap: 12px; }
+  .w-slider-item label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 500; color: var(--ink-soft); margin-bottom: 5px; }
+  .w-slider-item label b { color: var(--ink); }
+  input.w-range { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 99px; background: var(--border); outline: none; cursor: pointer; }
+  input.w-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--moss); border: 3px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,.15); cursor: pointer; }
+  .win-tags-wrap { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+  .w-win-tag { border: 1.5px solid var(--border); background: var(--card); border-radius: 99px; padding: 5px 12px; font-size: 12px; cursor: pointer; transition: all .2s; color: var(--ink-soft); font-family: 'DM Sans', sans-serif; }
+  .w-win-tag:hover { border-color: var(--warm); color: var(--warm); }
+  .w-win-tag.sel { background: var(--warm-lt); border-color: var(--warm); color: var(--warm); font-weight: 600; }
+  .w-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 13px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); background: var(--surface); outline: none; resize: none; transition: border-color .2s; line-height: 1.6; min-height: 80px; }
+  .w-textarea:focus { border-color: var(--moss); }
+  .w-submit { width: 100%; padding: 13px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--moss) 0%, var(--sky) 100%); color: #fff; font-family: 'DM Serif Display', serif; font-size: 16px; font-style: italic; cursor: pointer; transition: opacity .2s, transform .1s; }
+  .w-submit:hover { opacity: 0.9; } .w-submit:active { transform: scale(0.98); } .w-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .w-feedback { display: none; background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .w-feedback.show { display: block; }
+  .w-feedback-head { padding: 16px 16px 13px; background: linear-gradient(120deg, var(--moss-lt), var(--sky-lt)); border-bottom: 1px solid var(--border); }
+  .w-feedback-head h3 { font-family: 'DM Serif Display', serif; font-size: 17px; font-style: italic; color: var(--ink); margin-bottom: 3px; }
+  .w-feedback-head p { font-size: 12px; color: var(--ink-soft); }
+  .w-feedback-body { padding: 14px; }
+  .w-stats-row { display: flex; gap: 7px; margin-bottom: 13px; flex-wrap: wrap; }
+  .w-stat { flex: 1; min-width: 65px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 9px 10px; text-align: center; }
+  .w-stat-num { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); }
+  .w-stat-label { font-size: 10px; color: var(--ink-mute); margin-top: 2px; }
+  .w-ai-text { font-size: 14px; line-height: 1.8; color: var(--ink-soft); white-space: pre-wrap; }
+  .w-memory-note { margin-top: 12px; padding: 10px 14px; background: var(--warm-lt); border-radius: 10px; border-left: 3px solid var(--warm); font-size: 13px; color: var(--ink-soft); line-height: 1.6; font-style: italic; }
+  .w-typing { display: flex; gap: 5px; align-items: center; padding: 6px 0; }
+  .w-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--moss); animation: wbounce 1.2s infinite; }
+  .w-typing span:nth-child(2) { animation-delay: .2s; } .w-typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes wbounce { 0%,60%,100% { transform:translateY(0); opacity:.4; } 30% { transform:translateY(-5px); opacity:1; } }
+  .w-hist-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--border); align-items: center; }
+  .w-hist-label { font-size: 11px; color: var(--ink-mute); width: 100%; }
+  .w-hist-dot { width: 33px; height: 33px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--ink-mute); cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif; }
+  .w-hist-dot:hover { border-color: var(--moss); }
+  .w-hist-dot.active { background: var(--moss); color: #fff; border-color: var(--moss); }
+  .w-hist-dot.has-data { border-color: var(--sky); color: var(--sky); }
+  .w-hist-dot.has-data.active { background: var(--sky); color: #fff; }
+  .tt-summary { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 4px; }
+  .tt-sum-pill { background: var(--sage-lt); color: var(--sage); border-radius: 99px; padding: 4px 11px; font-size: 12px; font-weight: 600; }
+
+  @media (max-width: 480px) {
+    .dmr-note { width: 55px; }
+    .dmr-emojis { gap: 2px; }
+    .emoji-btn { width: 25px; height: 25px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" id="tab-today"  onclick="switchTab('today')">🌸 Today</button>
+  <button class="tab-btn"        id="tab-weekly" onclick="switchTab('weekly')">📅 Weekly</button>
+  <button class="tab-btn"        id="tab-garden" onclick="switchTab('garden')">🌱 Garden</button>
+  <button class="tab-btn"        id="tab-reasons" onclick="switchTab('reasons')">💛 Reasons</button>
+</nav>
+
+<!-- ═══ PAGE: TODAY ═══ -->
+<div class="page active" id="page-today">
+
+<header>
+  <div class="header-inner">
+    <div class="date-label" id="dateLabel">Today</div>
+    <h1 id="headerGreeting">Good morning,<br><em>Aishwarya 🌸</em></h1>
+    <div class="progress-strip"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 of 0 gentle intentions</div>
+  </div>
+</header>
+
+<div class="mood-bar">
+  <span>How are you feeling right now?</span>
+  <button class="mood-btn" onclick="setMood(this,'😔 Low')">😔 Low</button>
+  <button class="mood-btn" onclick="setMood(this,'😐 Okay')">😐 Okay</button>
+  <button class="mood-btn" onclick="setMood(this,'🙂 Good')">🙂 Good</button>
+  <button class="mood-btn" onclick="setMood(this,'😊 Great')">😊 Great</button>
+</div>
+
+<div class="affirmation-box">
+  <div class="quote-icon">🌿</div>
+  <div class="affirmation-text" id="affirmText">Loading…</div>
+  <button class="refresh-btn" onclick="nextAffirmation()" title="Another one">↻</button>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="expandAll()">📋 Expand All</button>
+  <button class="ctrl-btn" onclick="collapseAll()">🗂 Collapse All</button>
+  <button class="ctrl-btn danger" onclick="resetAll()">↺ Fresh day</button>
+</div>
+
+<div class="timetable" id="timetable"></div>
+
+<div class="add-section">
+  <h3>＋ Add a gentle intention</h3>
+  <div class="add-row">
+    <input class="add-input" id="newTime" type="time" style="max-width:105px" />
+    <input class="add-input" id="newTask" placeholder="What would feel good…" />
+  </div>
+  <div class="add-row">
+    <input class="add-input" id="newNote" placeholder="Optional note…" />
+    <select class="add-input" id="newCat" style="max-width:145px">
+      <option value="routine">🟢 Routine</option>
+      <option value="selfcare">💜 Self-care</option>
+      <option value="health">🔵 Health</option>
+      <option value="social">🟡 Social</option>
+      <option value="rest">🩷 Rest</option>
+    </select>
+    <button class="add-submit" onclick="addTask()">Add</button>
+  </div>
+</div>
+
+<!-- Water Bottle Tracker -->
+<div class="water-bottle-card">
+  <div class="water-bottle-header">
+    <div class="water-bottle-title">
+      <span class="wbt-icon">💧</span> Daily hydration
+    </div>
+    <div class="water-progress-badge" id="waterBadge">0 / 10 bottles</div>
+  </div>
+  <div class="water-bottles-grid" id="waterDrops"></div>
+  <div class="water-stats-row">
+    <div class="water-stat-left">
+      <div class="water-litres-text" id="waterLitres">0 L</div>
+      <div class="water-litres-sub">of 20 L goal</div>
+    </div>
+    <div class="water-progress-bar-wrap">
+      <div class="water-progress-bar-bg">
+        <div class="water-progress-bar-fill" id="waterFill"></div>
+      </div>
+      <div class="water-pct-label" id="waterPct">0%</div>
+    </div>
+    <div class="water-goal-text" id="waterGoalText">Keep going 🌊</div>
+  </div>
+</div>
+
+<div class="wellness-row">
+  <div class="wellness-card">
+    <h4>🫧 Breathe with me</h4>
+    <div class="breathe-visual">
+      <div class="breathe-flower" id="breatheFlower">🌸</div>
+      <button class="breathe-btn" id="breatheBtn" onclick="startBreathe()">Start 4–4–4</button>
+      <div class="breathe-status" id="breatheStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Memory Garden preview -->
+<div class="garden-section" style="margin-top:14px;">
+  <div class="garden-title">🌱 Your garden</div>
+  <div class="garden-sub">Every day you open this app, something grows.</div>
+  <div class="garden-grid" id="gardenPreview"></div>
+</div>
+
+<!-- Goodnight card (shows when all done or day ended) -->
+<div class="goodnight-card" id="goodnightCard">
+  <div class="moon">🌙</div>
+  <h2>Good night, Aishwarya.</h2>
+  <p id="goodnightText">Today wasn't perfect.<br>It didn't need to be.<br><br>Thank you for staying with yourself today.<br>See you tomorrow. 🌸</p>
+</div>
+
+</div><!-- end page-today -->
+
+<!-- ═══ PAGE: WEEKLY ═══ -->
+<div class="page" id="page-weekly">
+  <div class="weekly-header">
+    <div class="weekly-header-inner">
+      <div class="week-tag" id="wWeekTag">This Week</div>
+      <h2>How did your<br><em>week feel?</em></h2>
+      <p>No pressure. Just a gentle space to notice.</p>
+    </div>
+  </div>
+  <div class="week-nav-bar">
+    <button class="wnav-btn" onclick="wChangeWeek(-1)">‹</button>
+    <div class="week-range-label" id="wWeekRange">…</div>
+    <button class="wnav-btn" onclick="wChangeWeek(1)">›</button>
+  </div>
+  <div class="weekly-main">
+    <div class="w-card">
+      <div class="w-card-title">📋 Timetable this week</div>
+      <div class="w-card-sub">A quick look at how your gentle intentions went.</div>
+      <div class="tt-summary">
+        <span class="tt-sum-pill" id="wTTDone">— done today</span>
+        <span class="tt-sum-pill" style="background:var(--lav-lt);color:var(--lavender);" id="wTTTotal">— total</span>
+      </div>
+    </div>
+    <div class="w-card">
+      <div class="w-card-title">🌤 Day by day</div>
+      <div class="w-card-sub">Tap the emoji that fits. Skip any you can't remember — that's completely fine.</div>
+      <div class="day-mood-grid" id="wDayGrid"></div>
+    </div>
+    <div class="w-card">
+      <div class="w-card-title">🌿 Overall this week</div>
+      <div class="w-card-sub">Slide to wherever feels true. There's no right answer.</div>
+      <div class="w-slider-group">
+        <div class="w-slider-item"><label>Sleep quality <b id="wSleepVal">5</b>/10</label><input type="range" class="w-range" min="1" max="10" value="5" id="wSleepSlider" oninput="wUpdateSlider('sleep',this.value)" /></div>
+        <div class="w-slider-item"><label>Energy levels <b id="wEnergyVal">5</b>/10</label><input type="range" class="w-range" min="1" max="10" value="5" id="wEnergySlider" oninput="wUpdateSlider('energy',this.value)" /></div>
+        <div class="w-slider-item"><label>Anxiety / stress <b id="wAnxietyVal">5</b>/10</label><input type="range" class="w-range" min="1" max="10" value="5" id="wAnxietySlider" oninput="wUpdateSlider('anxiety',this.value)" /></div>
+        <div class="w-slider-item"><label>Connection with others <b id="wConnectionVal">5</b>/10</label><input type="range" class="w-range" min="1" max="10" value="5" id="wConnectionSlider" oninput="wUpdateSlider('connection',this.value)" /></div>
+      </div>
+    </div>
+    <div class="w-card">
+      <div class="w-card-title">✨ Small wins</div>
+      <div class="w-card-sub">Tap anything that happened this week, however tiny it seems to you.</div>
+      <div class="win-tags-wrap" id="wWinTags"></div>
+      <textarea class="w-textarea" id="wCustomWin" placeholder="Or write your own… "I made myself tea", "I replied to a text"" rows="2"></textarea>
+    </div>
+    <div class="w-card">
+      <div class="w-card-title">💬 In your own words</div>
+      <div class="w-card-sub">Anything about this week. Nothing is too small or too big.</div>
+      <textarea class="w-textarea" id="wFreeText" placeholder="This week I felt… / Something that helped was… / I struggled with…" rows="4"></textarea>
+    </div>
+    <div class="w-card" id="apiKeyCard">
+      <div class="w-card-title">🔑 Your Anthropic API key</div>
+      <div class="w-card-sub">Needed once to unlock your personalised reflection. Stored only on this device — never sent anywhere except Anthropic.</div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off"
+          style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--ink);outline:none;"
+          oninput="saveApiKey(this.value)" />
+        <span id="apiKeyStatus" style="font-size:18px;">🔒</span>
+      </div>
+    </div>
+    <button class="w-submit" id="wSubmitBtn" onclick="wSubmit()">Get my gentle reflection →</button>
+    <div class="w-feedback" id="wFeedback">
+      <div class="w-feedback-head">
+        <h3 id="wFeedbackTitle">Your reflection</h3>
+        <p id="wFeedbackSub">Generated just for you</p>
+      </div>
+      <div class="w-feedback-body">
+        <div class="w-stats-row" id="wStatsRow"></div>
+        <div id="wMemoryNote"></div>
+        <div id="wFeedbackContent"></div>
+        <div class="w-hist-row" id="wHistRow"><div class="w-hist-label">Past weeks — tap to revisit</div></div>
+      </div>
+    </div>
+  </div>
+</div><!-- end page-weekly -->
+
+<!-- ═══ PAGE: GARDEN ═══ -->
+<div class="page" id="page-garden">
+  <div class="weekly-header" style="background: linear-gradient(135deg, #6aA070 0%, #A8C5A0 100%);">
+    <div class="weekly-header-inner">
+      <div class="week-tag">Memory Garden</div>
+      <h2>Your garden,<br><em>growing slowly 🌱</em></h2>
+      <p>Every day you opened this app, something bloomed.</p>
+    </div>
+  </div>
+  <div style="padding: 20px 16px;">
+    <div style="background:var(--card); border:1.5px solid var(--border); border-radius:16px; padding:18px; margin-bottom:14px;">
+      <div style="font-family:'DM Serif Display',serif; font-size:16px; color:var(--ink); margin-bottom:6px;">How this works</div>
+      <div style="font-size:13px; color:var(--ink-mute); line-height:1.6;">
+        🌱 Opening the app on a difficult day<br>
+        🌷 Completing one intention<br>
+        🌸 Completing half your intentions<br>
+        🌼 Completing all your intentions<br>
+        🌺 A really good day<br><br>
+        <em>Even hard days grow something. You're here — that counts.</em>
+      </div>
+    </div>
+    <div style="background:var(--card); border:1.5px solid var(--border); border-radius:16px; padding:18px;">
+      <div style="font-family:'DM Serif Display',serif; font-size:16px; color:var(--ink); margin-bottom:4px;">Your garden</div>
+      <div style="font-size:12px; color:var(--ink-mute); margin-bottom:14px;" id="gardenCount">Loading…</div>
+      <div class="garden-grid" id="gardenFull"></div>
+    </div>
+  </div>
+</div><!-- end page-garden -->
+
+<!-- ═══ PAGE: REASONS ═══ -->
+<div class="page" id="page-reasons">
+  <div class="reasons-header">
+    <h2>Reasons to Stay</h2>
+    <p>For the days when you need a reminder. Add yours below.</p>
+  </div>
+  <div class="reasons-main">
+    <div id="reasonsList"></div>
+    <div style="background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:14px;">
+      <div style="font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:10px;">Add a reason</div>
+      <div class="add-reason-row">
+        <input class="reason-input" id="reasonInput" placeholder="Something that matters to you…" />
+        <button class="reason-add-btn" onclick="addReason()">Add</button>
+      </div>
+    </div>
+  </div>
+</div><!-- end page-reasons -->
+
+<!-- Emergency FAB -->
+<button class="emergency-fab" onclick="showEmergency()">❤️ Need a little help?</button>
+
+<!-- Emergency Modal -->
+<div class="emergency-overlay" id="emergencyOverlay" onclick="hideEmergency(event)">
+  <div class="emergency-modal">
+    <h3>You're not alone right now. 💛</h3>
+    <p class="em-sub">Try one of these. Just one. That's enough.</p>
+    <div class="comfort-items">
+      <div class="comfort-item"><div class="ci-icon">💧</div>Drink a glass of water. Right now, slowly. Feel it.</div>
+      <div class="comfort-item"><div class="ci-icon">🪟</div>Sit near a window. Let some light find you.</div>
+      <div class="comfort-item"><div class="ci-icon">🛋️</div>Wrap yourself in a blanket. You're allowed to be held.</div>
+      <div class="comfort-item"><div class="ci-icon">🎵</div>Listen to one song that feels like home.</div>
+      <div class="comfort-item"><div class="ci-icon">💬</div>Text one person, even just "hey". You don't have to explain.</div>
+      <div class="comfort-item"><div class="ci-icon">🌸</div>Remember: feelings change. This one will too.</div>
+    </div>
+    <button class="em-close" onclick="hideEmergency()">I'll try one of these 💛</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── AFFIRMATIONS (personal to Aishwarya) ────────────────────────
+const AFFIRMATIONS = [
+  "You don't have to earn rest.",
+  "Today is not a test.",
+  "Getting out of bed counts.",
+  "It's okay if today feels heavy.",
+  "You're still Aishwarya even on difficult days.",
+  "You don't have to fix everything today.",
+  "I'm proud of you for opening this app.",
+  "You are allowed to take up space.",
+  "One small thing is still something.",
+  "You have survived every hard day so far. Every single one.",
+  "Rest is part of healing, not the opposite of it.",
+  "You don't owe anyone a perfect version of yourself today.",
+  "Being here is enough.",
+  "Your feelings are real and they make sense.",
+  "You are not behind. You are exactly where you are.",
+];
+
+const COMPLETION_MESSAGES = [
+  '🌸 You did it.',
+  '💛 That counts.',
+  '🌿 One step is still progress.',
+  '😊 I\'m so glad you did that.',
+  '✨ That mattered.',
+  '🩷 Look at you go.',
+  '🌼 That\'s something to be proud of.',
+  '💙 You showed up for yourself.',
+];
+
+const CATEGORY_COLORS = {
+  routine:  '#7A9E87',
+  selfcare: '#B3A9D3',
+  health:   '#7BAFD4',
+  social:   '#D4A853',
+  rest:     '#E8A0A0',
+};
+
+const DEFAULT_TASKS = [
+  { time:'07:00', text:'🌞 Open the curtains',             note:'Let some light find you',          cat:'routine'  },
+  { time:'07:15', text:'💧 Sip some water',                note:'Before anything else',              cat:'health'   },
+  { time:'07:30', text:'🌱 Stretch for one minute',        note:'Gentle movement, no pressure',      cat:'selfcare' },
+  { time:'08:00', text:'🍎 Eat something — even something small', note:'Your body needs this',       cat:'health'   },
+  { time:'09:00', text:'🎵 Listen to one favourite song',  note:'Something that feels like home',    cat:'selfcare' },
+  { time:'11:00', text:'🚶 Step outside, even briefly',    note:'Fresh air, no pressure on distance',cat:'health'   },
+  { time:'12:30', text:'🍽️ Have lunch',                    note:'Sit down for it if you can',        cat:'health'   },
+  { time:'14:00', text:'🛋️ Rest — just be',               note:'You don\'t have to do anything',    cat:'rest'     },
+  { time:'16:00', text:'💬 Reach out to someone',          note:'Even a short message counts',       cat:'social'   },
+  { time:'18:00', text:'🌙 Dinner',                        note:'',                                  cat:'health'   },
+  { time:'19:30', text:'📖 Wind down gently',              note:'Journaling, a show, or quiet',      cat:'selfcare' },
+  { time:'21:00', text:'📵 Screen off, dim lights',        note:'Prepare your body for rest',        cat:'rest'     },
+  { time:'22:00', text:'🛏️ Rest now, Aishwarya',          note:'Good night 🌙',                     cat:'rest'     },
+];
+
+const DEFAULT_REASONS = [
+  { id:1, emoji:'🌸', text:'The person I might still become.' },
+  { id:2, emoji:'☕', text:'The next warm cup of tea.' },
+  { id:3, emoji:'🌅', text:'Mornings that feel different than this one.' },
+  { id:4, emoji:'🐾', text:'Animals who haven\'t met me yet.' },
+  { id:5, emoji:'💛', text:'The people who quietly love me.' },
+];
+
+let tasks = [];
+let affirmIdx = 0;
+let water = 0;
+let breatheTimer = null;
+let breathePhase = null;
+let gardenDays = [];
+let reasons = [];
+
+// ── TAB ───────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`page-${tab}`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  if (tab === 'weekly')  { wLoadCurrentWeek(); wRenderHistory(); wUpdateTTSummary(); initApiKeyUI(); }
+  if (tab === 'garden')  { renderFullGarden(); }
+  if (tab === 'reasons') { renderReasons(); }
+}
+
+// ── GREETING ─────────────────────────────────────────────────────
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning,';
+  if (h < 17) return 'Good afternoon,';
+  if (h < 21) return 'Good evening,';
+  return 'Good night,';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+function init() {
+  const now = new Date();
+  document.getElementById('dateLabel').textContent =
+    now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  document.getElementById('headerGreeting').innerHTML =
+    `${getGreeting()}<br><em>Aishwarya 🌸</em>`;
+
+  try {
+    const saved = localStorage.getItem('timetable_tasks');
+    tasks = saved ? JSON.parse(saved) : DEFAULT_TASKS.map((t,i) => ({...t, id:i, done:false, notes:''}));
+  } catch { tasks = DEFAULT_TASKS.map((t,i) => ({...t, id:i, done:false, notes:''})); }
+
+  try { water = parseInt(localStorage.getItem('timetable_water') || '0'); } catch {}
+  try { gardenDays = JSON.parse(localStorage.getItem('garden_days') || '[]'); } catch { gardenDays = []; }
+  try { reasons = JSON.parse(localStorage.getItem('aish_reasons') || 'null') || DEFAULT_REASONS; } catch { reasons = DEFAULT_REASONS; }
+
+  affirmIdx = Math.floor(Math.random() * AFFIRMATIONS.length);
+  document.getElementById('affirmText').textContent = AFFIRMATIONS[affirmIdx];
+
+  // Mark today in garden (opening app counts)
+  markGardenToday('opened');
+
+  renderTimetable();
+  renderWater();
+  renderGardenPreview();
+}
+
+// ── GARDEN ────────────────────────────────────────────────────────
+function todayKey() { return new Date().toISOString().slice(0,10); }
+
+function markGardenToday(level) {
+  const key = todayKey();
+  const existing = gardenDays.find(d => d.date === key);
+  const levelMap = { opened:1, one:2, half:3, all:4, great:5 };
+  const lv = levelMap[level] || 1;
+  if (!existing) {
+    gardenDays.push({ date: key, level: lv });
+  } else if (lv > existing.level) {
+    existing.level = lv;
+  }
+  try { localStorage.setItem('garden_days', JSON.stringify(gardenDays)); } catch {}
+}
+
+function flowerForLevel(lv) {
+  return ['🌱','🌱','🌷','🌸','🌼','🌺'][Math.min(lv,5)];
+}
+
+function renderGardenPreview() {
+  const el = document.getElementById('gardenPreview');
+  if (!gardenDays.length) { el.innerHTML = '<span class="garden-empty">Your first flower will appear when you open the app tomorrow 🌱</span>'; return; }
+  const recent = [...gardenDays].slice(-14);
+  el.innerHTML = recent.map(d => `<span class="garden-flower" title="${d.date}">${flowerForLevel(d.level)}</span>`).join('');
+}
+
+function renderFullGarden() {
+  const el = document.getElementById('gardenFull');
+  const cnt = document.getElementById('gardenCount');
+  if (!gardenDays.length) {
+    el.innerHTML = '<span class="garden-empty">Your garden is just getting started. Every day you open this app, something grows. 🌱</span>';
+    cnt.textContent = 'No days yet — come back tomorrow';
+    return;
+  }
+  cnt.textContent = `${gardenDays.length} day${gardenDays.length>1?'s':''} in your garden`;
+  el.innerHTML = gardenDays.map(d => `<span class="garden-flower" title="${d.date}">${flowerForLevel(d.level)}</span>`).join('');
+}
+
+// ── TIMETABLE ─────────────────────────────────────────────────────
+function renderTimetable() {
+  const el = document.getElementById('timetable');
+  const sorted = [...tasks].sort((a,b) => a.time.localeCompare(b.time));
+  el.innerHTML = sorted.map(task => blockHTML(task)).join('');
+  updateProgress();
+  renderGardenPreview();
+  checkGoodnight();
+}
+
+function blockHTML(t) {
+  const color = CATEGORY_COLORS[t.cat] || '#7A9E87';
+  const done = t.done ? 'done' : '';
+  return `
+  <div class="time-block ${done}" id="block-${t.id}" onclick="toggleBlock(event,${t.id})">
+    <div class="block-main">
+      <div class="time-pill">${formatTime(t.time)}</div>
+      <div class="category-dot" style="background:${color}"></div>
+      <div class="task-info">
+        <div class="task-text">${escHtml(t.text)}</div>
+        ${t.note ? `<div class="task-note">${escHtml(t.note)}</div>` : ''}
+      </div>
+      <div class="check-circle">✓</div>
+    </div>
+    <div class="block-expand" id="expand-${t.id}">
+      <div class="expand-label">Your note</div>
+      <textarea class="expand-note" placeholder="How did this feel? No pressure to write…"
+        onclick="event.stopPropagation()"
+        oninput="saveNote(${t.id},this.value)">${escHtml(t.notes||'')}</textarea>
+      <div class="expand-actions">
+        <button class="expand-edit" onclick="event.stopPropagation();toggleEditForm(${t.id})">✏️ Edit</button>
+        <button class="expand-del" onclick="event.stopPropagation();deleteTask(${t.id})">🗑 Remove</button>
+      </div>
+      <div class="edit-form" id="editform-${t.id}">
+        <div class="expand-label">Edit intention</div>
+        <div class="edit-row">
+          <input class="edit-input" id="edit-time-${t.id}" type="time" value="${t.time}" style="max-width:105px" onclick="event.stopPropagation()" />
+          <input class="edit-input" id="edit-text-${t.id}" value="${escHtml(t.text)}" placeholder="Intention…" onclick="event.stopPropagation()" />
+        </div>
+        <div class="edit-row">
+          <input class="edit-input" id="edit-note-${t.id}" value="${escHtml(t.note||'')}" placeholder="Short note (optional)…" onclick="event.stopPropagation()" />
+          <select class="edit-input" id="edit-cat-${t.id}" style="max-width:140px" onclick="event.stopPropagation()">
+            <option value="routine"  ${t.cat==='routine' ?'selected':''}>🟢 Routine</option>
+            <option value="selfcare" ${t.cat==='selfcare'?'selected':''}>💜 Self-care</option>
+            <option value="health"   ${t.cat==='health'  ?'selected':''}>🔵 Health</option>
+            <option value="social"   ${t.cat==='social'  ?'selected':''}>🟡 Social</option>
+            <option value="rest"     ${t.cat==='rest'    ?'selected':''}>🩷 Rest</option>
+          </select>
+        </div>
+        <div class="edit-row">
+          <button class="edit-save" onclick="event.stopPropagation();saveEdit(${t.id})">Save</button>
+          <button class="edit-cancel" onclick="event.stopPropagation();toggleEditForm(${t.id})">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleBlock(e, id) {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  const expand = document.getElementById(`expand-${id}`);
+  const isExpand = e.target.closest('.block-expand');
+  if (!isExpand) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    const wasOpen = expand && expand.classList.contains('open');
+    task.done = !task.done;
+    saveTasks();
+    if (task.done) {
+      // Update garden
+      const done = tasks.filter(t => t.done).length;
+      const total = tasks.length;
+      const pct = done/total;
+      if (pct === 1) markGardenToday('all');
+      else if (pct >= 0.5) markGardenToday('half');
+      else markGardenToday('one');
+      const msg = COMPLETION_MESSAGES[Math.floor(Math.random()*COMPLETION_MESSAGES.length)];
+      showToast(msg);
+    } else {
+      showToast('Intention unmarked — no worries 🌿');
+    }
+    renderTimetable();
+    if (wasOpen) {
+      const newExpand = document.getElementById(`expand-${id}`);
+      if (newExpand) newExpand.classList.add('open');
+    }
+    return;
+  }
+  expand.classList.toggle('open');
+}
+
+function expandAll()  { document.querySelectorAll('.block-expand').forEach(e => e.classList.add('open')); }
+function collapseAll(){ document.querySelectorAll('.block-expand').forEach(e => e.classList.remove('open')); }
+function saveNote(id, val) { const t = tasks.find(t => t.id===id); if(t){t.notes=val;saveTasks();} }
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks(); renderTimetable(); showToast('Intention removed 🌿');
+}
+
+function toggleEditForm(id) {
+  const form = document.getElementById(`editform-${id}`);
+  if (form) form.classList.toggle('open');
+}
+
+function saveEdit(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  const newText = document.getElementById(`edit-text-${id}`).value.trim();
+  if (!newText) { showToast('Please enter an intention'); return; }
+  task.text = newText;
+  task.time = document.getElementById(`edit-time-${id}`).value || task.time;
+  task.note = document.getElementById(`edit-note-${id}`).value.trim();
+  task.cat  = document.getElementById(`edit-cat-${id}`).value;
+  saveTasks(); renderTimetable();
+  const expand = document.getElementById(`expand-${id}`);
+  if (expand) expand.classList.add('open');
+  showToast('Updated ✓');
+}
+
+function addTask() {
+  const time = document.getElementById('newTime').value;
+  const text = document.getElementById('newTask').value.trim();
+  const note = document.getElementById('newNote').value.trim();
+  const cat  = document.getElementById('newCat').value;
+  if (!text) { showToast('What would the intention be?'); return; }
+  const id = Date.now();
+  tasks.push({ id, time: time||'09:00', text, note, cat, done:false, notes:'' });
+  saveTasks(); renderTimetable();
+  document.getElementById('newTask').value = '';
+  document.getElementById('newNote').value = '';
+  showToast('Intention added 🌱');
+}
+
+function resetAll() {
+  if (!confirm('Start fresh for today? Your progress will clear.')) return;
+  tasks.forEach(t => { t.done=false; t.notes=''; });
+  saveTasks(); water=0; renderTimetable(); renderWater();
+  document.getElementById('goodnightCard').classList.remove('show');
+  showToast('Fresh start 🌅 You\'ve got this.');
+}
+
+function updateProgress() {
+  const total = tasks.length;
+  const done  = tasks.filter(t => t.done).length;
+  const pct   = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent =
+    done === 0 ? `${total} gentle intentions today` :
+    done === total ? `All ${total} intentions — well done 🌸` :
+    `${done} of ${total} gentle intentions`;
+}
+
+function checkGoodnight() {
+  const done = tasks.filter(t => t.done).length;
+  const total = tasks.length;
+  const card = document.getElementById('goodnightCard');
+  const txt = document.getElementById('goodnightText');
+  if (total > 0 && done === total) {
+    txt.innerHTML = 'Every intention. All of them.<br>That\'s not nothing — that\'s everything.<br><br>Rest now, Aishwarya. You earned it. 🌙';
+    card.classList.add('show');
+  } else if (total > 0 && done >= 1) {
+    const h = new Date().getHours();
+    if (h >= 21) {
+      txt.innerHTML = 'Today wasn\'t perfect.<br>It didn\'t need to be.<br><br>Thank you for staying with yourself today.<br>See you tomorrow. 🌸';
+      card.classList.add('show');
+    }
+  }
+}
+
+// ── WATER ─────────────────────────────────────────────────────────
+function bottleSVG(index, filled, uid) {
+  // Water fill height inside bottle body (body goes from y=18 to y=58, height=40)
+  const bodyH = 40, bodyY = 18;
+  const waterH = filled ? bodyH : 0;
+  const waterY = bodyY + bodyH - waterH;
+
+  // Colour palette
+  const bottleStroke  = filled ? '#5BAADA' : '#B8D4E8';
+  const bottleBody    = filled ? 'rgba(168,210,240,0.18)' : 'rgba(220,235,245,0.12)';
+  const waterColor    = filled ? '#A8D4F0' : 'none';
+  const waterDark     = filled ? '#7BBCE0' : 'none';
+  const capColor      = filled ? '#5BAADA' : '#C8DFF0';
+  const labelBg       = filled ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)';
+  const labelText     = filled ? '#3A8BBF' : '#A0BDD0';
+  const shine         = filled ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.25)';
+  const clipId        = `bc_b${uid}_${index}`;
+
+  return `
+  <svg class="bottle-svg" viewBox="0 0 34 64" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="${clipId}">
+        <rect x="5" y="${bodyY}" width="24" height="${bodyH}" rx="5"/>
+      </clipPath>
+    </defs>
+    <rect x="5" y="${bodyY}" width="24" height="${bodyH}" rx="5" fill="${bottleBody}" stroke="${bottleStroke}" stroke-width="1.4"/>
+    <rect x="5" y="${waterY}" width="24" height="${waterH}" rx="0" fill="${waterColor}" clip-path="url(#${clipId})"/>
+    ${filled ? `<ellipse cx="17" cy="${waterY+1}" rx="10" ry="2" fill="${waterDark}" opacity="0.35"/>` : ''}
+    <rect x="11" y="10" width="12" height="9" rx="3" fill="${bottleBody}" stroke="${bottleStroke}" stroke-width="1.4"/>
+    <rect x="12" y="5" width="10" height="7" rx="2.5" fill="${capColor}" stroke="${bottleStroke}" stroke-width="1"/>
+    <rect x="8" y="30" width="18" height="16" rx="3" fill="${labelBg}" stroke="${bottleStroke}" stroke-width="0.7" opacity="0.9"/>
+    <text x="17" y="39.5" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="6.5" font-weight="700" fill="${labelText}">2L</text>
+    <rect x="8.5" y="20" width="4" height="18" rx="2" fill="${shine}" opacity="0.7"/>
+    <ellipse cx="17" cy="57" rx="9" ry="1.5" fill="${bottleStroke}" opacity="${filled ? 0.15 : 0.07}"/>
+  </svg>`;
+}
+
+function renderWater() {
+  const el = document.getElementById('waterDrops');
+  const uid = Date.now();
+  el.innerHTML = Array.from({length:10}, (_, i) => {
+    const filled = i < water;
+    return `<div class="bottle-wrap ${filled ? 'filled' : ''}" onclick="toggleWater(${i})" title="Bottle ${i+1}">
+      ${bottleSVG(i, filled, uid)}
+      <span class="bottle-num">#${i+1}</span>
+    </div>`;
+  }).join('');
+
+  const litres = (water * 2).toFixed(0);
+  const pct = Math.round((water / 10) * 100);
+
+  document.getElementById('waterBadge').textContent = `${water} / 10 bottles`;
+  document.getElementById('waterLitres').textContent = `${litres} L`;
+  document.getElementById('waterFill').style.width = pct + '%';
+  document.getElementById('waterPct').textContent = pct + '%';
+
+  const goals = ['Keep going 🌊','Just started! 💧','Building momentum 💙','Halfway there ✨','Almost done 🌟','All 20 litres! 🎉'];
+  const gi = water === 10 ? 5 : water >= 8 ? 4 : water >= 5 ? 3 : water >= 3 ? 2 : water >= 1 ? 1 : 0;
+  document.getElementById('waterGoalText').textContent = goals[gi];
+
+  try { localStorage.setItem('timetable_water', water); } catch {}
+}
+
+function toggleWater(i) {
+  water = (i < water) ? i : i + 1;
+  renderWater();
+  if (water === 10) showToast('🌊 All 20 litres! Your body is glowing.');
+  else if (water === 5)  showToast('💧 Halfway — 10 litres in. Beautiful.');
+  else if (water >= 1)   showToast(`💧 Bottle ${water} done. Keep it up.`);
+}
+
+// ── API KEY ───────────────────────────────────────────────────────
+function getApiKey() {
+  try { return localStorage.getItem('archie_api_key') || ''; } catch { return ''; }
+}
+function saveApiKey(val) {
+  try { localStorage.setItem('archie_api_key', val.trim()); } catch {}
+  document.getElementById('apiKeyStatus').textContent = val.trim().startsWith('sk-ant-') ? '🔓' : '🔒';
+}
+function initApiKeyUI() {
+  const key = getApiKey();
+  if (key) {
+    const el = document.getElementById('apiKeyInput');
+    if (el) el.value = key;
+    const st = document.getElementById('apiKeyStatus');
+    if (st) st.textContent = key.startsWith('sk-ant-') ? '🔓' : '🔒';
+  }
+}
+
+// ── BREATHE (visual flower) ───────────────────────────────────────
+function startBreathe() {
+  const btn = document.getElementById('breatheBtn');
+  const status = document.getElementById('breatheStatus');
+  const flower = document.getElementById('breatheFlower');
+  if (breatheTimer) {
+    clearTimeout(breatheTimer);
+    breatheTimer = null;
+    btn.textContent = 'Start 4–4–4';
+    status.textContent = '';
+    flower.className = 'breathe-flower';
+    return;
+  }
+  btn.textContent = '■ Stop';
+  const steps = [
+    { msg:'Breathe in… 🌸', cls:'inhaling', dur:4000 },
+    { msg:'Hold gently…',   cls:'holding',  dur:4000 },
+    { msg:'Let it go… 💨',  cls:'exhaling', dur:4000 },
+  ];
+  let round = 0;
+  function step(i) {
+    const s = steps[i % 3];
+    status.textContent = s.msg;
+    flower.className = 'breathe-flower ' + s.cls;
+    breatheTimer = setTimeout(() => {
+      round++;
+      if (round >= 9) {
+        status.textContent = '✨ Beautiful. Well done.';
+        flower.className = 'breathe-flower';
+        btn.textContent = 'Start 4–4–4';
+        breatheTimer = null;
+        return;
+      }
+      step(i+1);
+    }, s.dur);
+  }
+  step(0);
+}
+
+// ── MOOD ──────────────────────────────────────────────────────────
+function setMood(btn, mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const msg = mood.includes('Low') ? 'That\'s real. The ❤️ button is here if you need it.' :
+              mood.includes('Okay') ? 'Okay is completely valid. 🌿' :
+              mood.includes('Good') ? '🙂 Good to hear.' : '😊 So glad.';
+  showToast(msg);
+}
+
+// ── AFFIRMATION ───────────────────────────────────────────────────
+function nextAffirmation() {
+  affirmIdx = (affirmIdx + 1) % AFFIRMATIONS.length;
+  document.getElementById('affirmText').textContent = AFFIRMATIONS[affirmIdx];
+}
+
+// ── REASONS ──────────────────────────────────────────────────────
+function renderReasons() {
+  const el = document.getElementById('reasonsList');
+  if (!reasons.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--ink-mute);font-style:italic;padding:10px 0;">Add your first reason below. It can be as small as you like.</div>';
+    return;
+  }
+  el.innerHTML = reasons.map(r => `
+    <div class="reason-card">
+      <div class="reason-emoji">${r.emoji}</div>
+      <div class="reason-text">${escHtml(r.text)}</div>
+      <button class="reason-del" onclick="deleteReason(${r.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addReason() {
+  const input = document.getElementById('reasonInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const emojis = ['🌸','💛','🌿','☕','🌅','🐾','✨','🩷','🌙','🌺'];
+  const id = Date.now();
+  const emoji = emojis[Math.floor(Math.random()*emojis.length)];
+  reasons.push({ id, emoji, text });
+  saveReasons(); renderReasons();
+  input.value = '';
+  showToast('Added to your reasons 💛');
+}
+
+function deleteReason(id) {
+  reasons = reasons.filter(r => r.id !== id);
+  saveReasons(); renderReasons();
+}
+
+function saveReasons() {
+  try { localStorage.setItem('aish_reasons', JSON.stringify(reasons)); } catch {}
+}
+
+// ── EMERGENCY ─────────────────────────────────────────────────────
+function showEmergency() { document.getElementById('emergencyOverlay').classList.add('show'); }
+function hideEmergency(e) {
+  if (!e || e.target === document.getElementById('emergencyOverlay') || !e.target.closest) {
+    document.getElementById('emergencyOverlay').classList.remove('show');
+  }
+}
+
+// ── STORAGE ──────────────────────────────────────────────────────
+function saveTasks() { try { localStorage.setItem('timetable_tasks', JSON.stringify(tasks)); } catch {} }
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function formatTime(t) {
+  if (!t) return '—';
+  const [h,m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hr = h % 12 || 12;
+  return `${hr}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+function escHtml(s='') {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+document.addEventListener('dblclick', e => {
+  const main = e.target.closest('.block-main');
+  if (!main) return;
+  const block = main.closest('.time-block');
+  if (!block) return;
+  const id = block.id.replace('block-','');
+  const expand = document.getElementById(`expand-${id}`);
+  if (expand) expand.classList.toggle('open');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// ── WEEKLY MODULE ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+const W_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const W_MOODS = [{v:1,e:'😔'},{v:2,e:'😞'},{v:3,e:'😐'},{v:4,e:'🙂'},{v:5,e:'😊'}];
+const W_WINS = [
+  'Got out of bed','Ate a meal','Drank water','Went outside',
+  'Slept okay','Talked to someone','Did something I enjoy',
+  'Took my medication','Had a shower','Rested when needed',
+  'Was kind to myself','Finished a small intention',
+];
+
+let wWeekOffset = 0;
+let wWeekData = {};
+let wDayMoods = {};
+let wSelectedWins = new Set();
+let wSliders = { sleep:5, energy:5, anxiety:5, connection:5 };
+
+function wGetKey(offset) {
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7) + offset*7);
+  return monday.toISOString().slice(0,10);
+}
+function wGetRange(offset) {
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7) + offset*7);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const fmt = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return `${fmt(monday)} – ${fmt(sunday)}`;
+}
+function wUpdateHeader() {
+  document.getElementById('wWeekRange').textContent = wGetRange(wWeekOffset);
+  document.getElementById('wWeekTag').textContent =
+    wWeekOffset === 0 ? 'This Week' : wWeekOffset === -1 ? 'Last Week' : `Week of ${wGetRange(wWeekOffset).split('–')[0].trim()}`;
+}
+function wChangeWeek(dir) {
+  wSaveCurrentWeek(); wWeekOffset += dir;
+  wUpdateHeader(); wLoadCurrentWeek(); wRenderHistory();
+  wUpdateTTSummary();
+  document.getElementById('wFeedback').classList.remove('show');
+}
+function wUpdateTTSummary() {
+  const total = tasks.length;
+  const done  = tasks.filter(t => t.done).length;
+  document.getElementById('wTTDone').textContent = `${done} done today`;
+  document.getElementById('wTTTotal').textContent = `${total} total intentions`;
+}
+function wBuildDayGrid() {
+  document.getElementById('wDayGrid').innerHTML = W_DAYS.map(d => `
+    <div class="day-mood-row">
+      <div class="dmr-name">${d}</div>
+      <div class="dmr-emojis">
+        ${W_MOODS.map(m => `<button class="emoji-btn" data-wday="${d}" data-wv="${m.v}" onclick="wSetMood('${d}',${m.v})">${m.e}</button>`).join('')}
+      </div>
+      <input class="dmr-note" id="wdaynote-${d}" placeholder="note…" oninput="wSaveDayNote('${d}',this.value)" />
+    </div>
+  `).join('');
+}
+function wBuildWins() {
+  document.getElementById('wWinTags').innerHTML = W_WINS.map(w =>
+    `<button class="w-win-tag" onclick="wToggleWin(this,'${w}')">${w}</button>`
+  ).join('');
+}
+function wSetMood(day, val) {
+  wDayMoods[day] = val;
+  document.querySelectorAll(`.emoji-btn[data-wday="${day}"]`).forEach(b =>
+    b.classList.toggle('sel', parseInt(b.dataset.wv) === val));
+}
+function wSaveDayNote(day, val) {
+  const key = wGetKey(wWeekOffset);
+  if (!wWeekData[key]) wWeekData[key] = {};
+  if (!wWeekData[key].dayNotes) wWeekData[key].dayNotes = {};
+  wWeekData[key].dayNotes[day] = val;
+}
+function wToggleWin(btn, label) {
+  if (wSelectedWins.has(label)) { wSelectedWins.delete(label); btn.classList.remove('sel'); }
+  else { wSelectedWins.add(label); btn.classList.add('sel'); }
+}
+function wUpdateSlider(key, val) {
+  wSliders[key] = parseInt(val);
+  document.getElementById(`w${key.charAt(0).toUpperCase()+key.slice(1)}Val`).textContent = val;
+}
+function wSaveCurrentWeek() {
+  const key = wGetKey(wWeekOffset);
+  wWeekData[key] = {
+    moods: {...wDayMoods}, sliders: {...wSliders},
+    wins: [...wSelectedWins],
+    customWin: document.getElementById('wCustomWin').value,
+    freeText: document.getElementById('wFreeText').value,
+    dayNotes: wWeekData[key]?.dayNotes || {},
+    feedback: wWeekData[key]?.feedback || null,
+  };
+  try { localStorage.setItem('weekly_data_v3', JSON.stringify(wWeekData)); } catch {}
+}
+function wLoadStorage() {
+  try { const s = localStorage.getItem('weekly_data_v3'); if (s) wWeekData = JSON.parse(s); } catch {}
+}
+function wLoadCurrentWeek() {
+  wUpdateHeader();
+  const key = wGetKey(wWeekOffset);
+  const d = wWeekData[key];
+  wDayMoods = {}; wSelectedWins = new Set();
+  wSliders = { sleep:5, energy:5, anxiety:5, connection:5 };
+  ['sleep','energy','anxiety','connection'].forEach(k => {
+    document.getElementById(`w${k.charAt(0).toUpperCase()+k.slice(1)}Slider`).value = 5;
+    document.getElementById(`w${k.charAt(0).toUpperCase()+k.slice(1)}Val`).textContent = '5';
+  });
+  document.getElementById('wFreeText').value = '';
+  document.getElementById('wCustomWin').value = '';
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.w-win-tag').forEach(b => b.classList.remove('sel'));
+  W_DAYS.forEach(day => { const el = document.getElementById(`wdaynote-${day}`); if (el) el.value = ''; });
+  if (!d) return;
+  wDayMoods = d.moods || {};
+  Object.entries(wDayMoods).forEach(([day,val]) => {
+    if (val) document.querySelectorAll(`.emoji-btn[data-wday="${day}"]`).forEach(b =>
+      b.classList.toggle('sel', parseInt(b.dataset.wv) === val));
+  });
+  if (d.sliders) Object.entries(d.sliders).forEach(([k,v]) => {
+    wSliders[k] = v;
+    const id2 = `w${k.charAt(0).toUpperCase()+k.slice(1)}`;
+    const sl = document.getElementById(`${id2}Slider`);
+    const vl = document.getElementById(`${id2}Val`);
+    if (sl) sl.value = v; if (vl) vl.textContent = v;
+  });
+  wSelectedWins = new Set(d.wins || []);
+  document.querySelectorAll('.w-win-tag').forEach(b => { if (wSelectedWins.has(b.textContent)) b.classList.add('sel'); });
+  document.getElementById('wCustomWin').value = d.customWin || '';
+  document.getElementById('wFreeText').value = d.freeText || '';
+  if (d.dayNotes) Object.entries(d.dayNotes).forEach(([day,note]) => {
+    const el = document.getElementById(`wdaynote-${day}`); if (el && note) el.value = note;
+  });
+  if (d.feedback) wShowSavedFeedback(d.feedback, d);
+}
+function wRenderHistory() {
+  const row = document.getElementById('wHistRow');
+  row.innerHTML = '<div class="w-hist-label">Past weeks — tap to revisit</div>';
+  for (let i = -4; i <= 0; i++) {
+    const key = wGetKey(i);
+    const hasData = !!wWeekData[key];
+    const isActive = i === wWeekOffset;
+    const label = i === 0 ? 'Now' : i === -1 ? '-1w' : `${i}w`;
+    const dot = document.createElement('div');
+    dot.className = `w-hist-dot${isActive?' active':''}${hasData&&!isActive?' has-data':''}`;
+    dot.textContent = label; dot.title = wGetRange(i);
+    dot.onclick = () => wChangeWeek(i - wWeekOffset);
+    row.appendChild(dot);
+  }
+}
+
+// ── MEMORY COMPARISON ─────────────────────────────────────────────
+function wBuildMemoryNote(data) {
+  // Compare to 4 weeks ago for meaningful observations
+  const notes = [];
+  const prevKeys = [-1,-2,-3,-4].map(i => wGetKey(wWeekOffset + i));
+  const prevData = prevKeys.map(k => wWeekData[k]).filter(Boolean);
+  if (!prevData.length) return '';
+
+  const curWater = water; // today's water
+  const prevWaterAvg = prevData.reduce((a,b) => a + (b.sliders?.sleep||5), 0) / prevData.length;
+  const curSleep = data.sliders?.sleep || 5;
+
+  // Outside trips from wins
+  const outsideThisWeek = (data.wins||[]).includes('Went outside') ? 1 : 0;
+  const outsidePrev = prevData.filter(d => (d.wins||[]).includes('Went outside')).length;
+
+  // Sleep improvement
+  const prevSleepAvg = prevData.reduce((a,b) => a + (b.sliders?.sleep||5), 0) / prevData.length;
+  if (curSleep > prevSleepAvg + 1) {
+    notes.push(`Your sleep looks a little better than recent weeks. That matters more than it might seem.`);
+  }
+
+  // Going outside
+  if (outsideThisWeek && !outsidePrev) {
+    notes.push(`You went outside this week. That's something you haven't noted in a little while. That's real progress, Aishwarya.`);
+  } else if (outsideThisWeek && outsidePrev >= 2) {
+    notes.push(`You've been going outside consistently for a few weeks now. A month ago that might have felt impossible. Look how far you've come.`);
+  }
+
+  // Meals / self-care consistency
+  const hadMealThis = (data.wins||[]).includes('Ate a meal');
+  const hadMealPrev = prevData.filter(d => (d.wins||[]).includes('Ate a meal')).length;
+  if (hadMealThis && hadMealPrev >= 2) {
+    notes.push(`You've been eating regularly for a few weeks. Your body remembers that kindness, even when your mind doesn't.`);
+  }
+
+  if (!notes.length) return '';
+  return notes[0];
+}
+
+async function wSubmit() {
+  wSaveCurrentWeek();
+  const btn = document.getElementById('wSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Taking a moment…';
+  const wrap = document.getElementById('wFeedback');
+  wrap.classList.add('show');
+  document.getElementById('wFeedbackTitle').textContent = 'Reading your week…';
+  document.getElementById('wFeedbackSub').textContent = 'Just a moment';
+  document.getElementById('wStatsRow').innerHTML = '';
+  document.getElementById('wMemoryNote').innerHTML = '';
+  document.getElementById('wFeedbackContent').innerHTML =
+    '<div class="w-typing"><span></span><span></span><span></span></div>';
+
+  const key = wGetKey(wWeekOffset);
+  const data = wWeekData[key];
+  const prompt = wBuildPrompt(data);
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    wShowFeedback("Please enter your Anthropic API key in the field above to unlock your reflection. It's stored only on this device.", data);
+    btn.disabled = false; btn.textContent = 'Get my gentle reflection →';
+    return;
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: `You are a warm, personal companion writing a weekly reflection for Aishwarya, who is on her own path through mental illness. You know her by name and you care about her deeply.
+
+CRITICAL TONE RULES:
+- Address her as Aishwarya, warmly and directly.
+- NEVER frame low scores or a hard week as failure. Hard weeks are real and valid and survivable.
+- Always find something true to acknowledge — even "you showed up to reflect" counts and matters.
+- Use warm, simple, human language. No clinical terms. No performance language.
+- Do NOT say: "it's important to", "you should", "you need to", "make sure to".
+- DO say: "that matters", "that's real", "that counts", "no small thing", "I'm proud of you".
+- Acknowledge hard feelings without minimising them — "that sounds genuinely hard" not "I understand that was challenging".
+- End with ONE soft invitation — not a task. Something like "if it feels okay, maybe..." Never a directive.
+- Write 2-3 short flowing paragraphs. No bullets. No headers. No lists.
+- Max 200 words. Gentle, warm, personal.
+- Tone: like a letter from someone who loves her and remembers her.`,
+        messages: [{ role:'user', content: prompt }],
+      }),
+    });
+    const result = await res.json();
+    const text = result.content?.map(c => c.text||'').join('') ||
+      'Something went quiet on our end. But you still showed up this week, Aishwarya — and that matters more than you know.';
+    wWeekData[key].feedback = text;
+    try { localStorage.setItem('weekly_data_v3', JSON.stringify(wWeekData)); } catch {}
+    wShowFeedback(text, data);
+  } catch {
+    wShowFeedback("Something went quiet on our end, but you still showed up to reflect — and that's real, Aishwarya. Whatever this week held for you, you're here now, and that counts.", data);
+  }
+  btn.disabled = false; btn.textContent = 'Refresh reflection →';
+  wrap.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function wBuildPrompt(data) {
+  const moodMap = {1:'very hard',2:'difficult',3:'okay',4:'good',5:'great'};
+  const moodEntries = Object.entries(data.moods||{}).filter(([,v])=>v);
+  const moodSummary = moodEntries.length ? moodEntries.map(([day,v])=>`${day}: ${moodMap[v]}`).join(', ') : 'No days recorded';
+  const wins = [...(data.wins||[]), data.customWin].filter(Boolean);
+  const s = data.sliders||{};
+  const dayNotes = Object.entries(data.dayNotes||{}).filter(([,v])=>v).map(([d,v])=>`${d}: "${v}"`).join('; ');
+  const ttDone = tasks.filter(t=>t.done).length;
+  const ttTotal = tasks.length;
+  const gardenCount = gardenDays.length;
+  return `Here is Aishwarya's weekly check-in. Please write her gentle, personal reflection.
+
+Day-by-day mood: ${moodSummary}
+Sleep quality: ${s.sleep||5}/10
+Energy levels: ${s.energy||5}/10
+Anxiety/stress: ${s.anxiety||5}/10
+Connection with others: ${s.connection||5}/10
+Gentle intentions completed today: ${ttDone} of ${ttTotal}
+Days she has opened this app total: ${gardenCount}
+Small wins she noted: ${wins.length ? wins.join(', ') : 'none selected'}
+${dayNotes ? `Day notes: ${dayNotes}` : ''}
+In her own words: "${data.freeText || 'Nothing written'}"
+
+Please write her warm, personal reflection now. Address her as Aishwarya.`;
+}
+
+function wShowFeedback(text, data) {
+  const moods = Object.values(data.moods||{}).filter(Boolean);
+  const avg = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : '—';
+  const wins = [...(data.wins||[]), data.customWin].filter(Boolean);
+  const ttDone = tasks.filter(t=>t.done).length;
+  document.getElementById('wFeedbackTitle').textContent = 'Your reflection, Aishwarya';
+  document.getElementById('wFeedbackSub').textContent = wGetRange(wWeekOffset);
+  document.getElementById('wStatsRow').innerHTML = `
+    <div class="w-stat"><div class="w-stat-num">${avg}</div><div class="w-stat-label">avg mood</div></div>
+    <div class="w-stat"><div class="w-stat-num">${moods.length}</div><div class="w-stat-label">days logged</div></div>
+    <div class="w-stat"><div class="w-stat-num">${wins.length}</div><div class="w-stat-label">small wins</div></div>
+    <div class="w-stat"><div class="w-stat-num">${gardenDays.length}</div><div class="w-stat-label">garden days</div></div>
+  `;
+  const memNote = wBuildMemoryNote(data);
+  if (memNote) {
+    document.getElementById('wMemoryNote').innerHTML =
+      `<div class="w-memory-note">🌿 ${escHtml(memNote)}</div>`;
+  }
+  document.getElementById('wFeedbackContent').innerHTML = `<div class="w-ai-text">${escHtml(text)}</div>`;
+  wRenderHistory();
+}
+
+function wShowSavedFeedback(text, data) {
+  document.getElementById('wFeedback').classList.add('show');
+  wShowFeedback(text, data);
+}
+
+function wInit() {
+  wLoadStorage(); wBuildDayGrid(); wBuildWins(); wUpdateHeader();
+}
+
+init();
+wInit();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const probe = await fetch('./sw.js', { method: 'HEAD' });
+        if (!probe.ok) return;
+        await navigator.serviceWorker.register('./sw.js');
+      } catch (_) {}
+    });
+  }
+</script>
+</body>
+</html>
