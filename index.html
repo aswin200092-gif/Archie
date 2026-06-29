@@ -382,8 +382,24 @@
   .reason-add-btn { background: #9060A0; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; }
 
   /* ── TOAST ── */
-  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--ink); color: #fff; border-radius: 99px; padding: 10px 20px; font-size: 13px; font-weight: 500; transition: transform .35s cubic-bezier(.4,0,.2,1); pointer-events: none; z-index: 999; white-space: nowrap; }
-  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink); color: #fff;
+    border-radius: 99px; padding: 10px 20px;
+    font-size: 13px; font-weight: 500;
+    pointer-events: none; z-index: 999;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+  }
+  .toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear 0s;
+  }
 
   /* ── WEEKLY SECTION ── */
   .weekly-header { background: linear-gradient(135deg, #8AAF8E 0%, #A8C5DA 100%); padding: 26px 20px 20px; text-align: center; position: relative; overflow: hidden; }
@@ -1252,6 +1268,8 @@ let toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById('toast');
   if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+  t.classList.remove('show');
+  void t.offsetWidth; // force reflow — resets animation
   t.textContent = msg;
   t.classList.add('show');
   toastTimer = setTimeout(() => {
