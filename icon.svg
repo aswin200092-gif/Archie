@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+  <defs>
+    <radialGradient id="bg" cx="40%" cy="35%">
+      <stop offset="0%" stop-color="#EBF2EE"/>
+      <stop offset="100%" stop-color="#B3A9D3"/>
+    </radialGradient>
+    <radialGradient id="petal" cx="50%" cy="30%">
+      <stop offset="0%" stop-color="#F9D6E8"/>
+      <stop offset="100%" stop-color="#E8A0C0"/>
+    </radialGradient>
+    <radialGradient id="center" cx="50%" cy="40%">
+      <stop offset="0%" stop-color="#FFF0B0"/>
+      <stop offset="100%" stop-color="#D4A853"/>
+    </radialGradient>
+  </defs>
+  <!-- Petals -->
+  <ellipse cx="256" cy="148" rx="42" ry="72" fill="url(#petal)" opacity="0.95"/>
+  <ellipse cx="256" cy="364" rx="42" ry="72" fill="url(#petal)" opacity="0.95"/>
+  <ellipse cx="148" cy="256" rx="72" ry="42" fill="url(#petal)" opacity="0.95"/>
+  <ellipse cx="364" cy="256" rx="72" ry="42" fill="url(#petal)" opacity="0.95"/>
+  <!-- Diagonal petals -->
+  <ellipse cx="175" cy="175" rx="42" ry="72" fill="url(#petal)" opacity="0.88" transform="rotate(45 175 175)"/>
+  <ellipse cx="337" cy="175" rx="42" ry="72" fill="url(#petal)" opacity="0.88" transform="rotate(-45 337 175)"/>
+  <ellipse cx="175" cy="337" rx="42" ry="72" fill="url(#petal)" opacity="0.88" transform="rotate(-45 175 337)"/>
+  <ellipse cx="337" cy="337" rx="42" ry="72" fill="url(#petal)" opacity="0.88" transform="rotate(45 337 337)"/>
+  <!-- Center -->
+  <circle cx="256" cy="256" r="72" fill="url(#center)"/>
+  <circle cx="256" cy="256" r="50" fill="#F9E070" opacity="0.7"/>
+  <!-- Center dots pattern -->
+  <circle cx="256" cy="235" r="6" fill="#C8882A" opacity="0.7"/>
+  <circle cx="274" cy="245" r="6" fill="#C8882A" opacity="0.7"/>
+  <circle cx="270" cy="265" r="6" fill="#C8882A" opacity="0.7"/>
+  <circle cx="256" cy="272" r="6" fill="#C8882A" opacity="0.7"/>
+  <circle cx="242" cy="265" r="6" fill="#C8882A" opacity="0.7"/>
+  <circle cx="238" cy="245" r="6" fill="#C8882A" opacity="0.7"/>
+</svg>
