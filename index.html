@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="Archie">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
 <title>Archie</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -1248,10 +1248,16 @@ function formatTime(t) {
 function escHtml(s='') {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+let toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+  t.textContent = msg;
+  t.classList.add('show');
+  toastTimer = setTimeout(() => {
+    t.classList.remove('show');
+    toastTimer = null;
+  }, 2000);
 }
 
 document.addEventListener('dblclick', e => {
